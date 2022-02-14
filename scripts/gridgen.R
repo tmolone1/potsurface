@@ -21,7 +21,16 @@ mygrid<-function(x, y, z, buff, coords) {
 locs_sp<-as_Spatial(locs_sf)
 x<-locs_sp$long
 y<-locs_sp$lat
-z<-locs_sp$long*3
+z<-locs_sp$level
 buff<-.05
 coords<-CRS("+init=EPSG:4326")
 grid<-mygrid(x, y, z, buff, coords)
+
+
+grd_sf  <-  st_as_sf(grid, coords = c("lon", "lat"), 
+                     crs = coords, agr = "constant")
+
+grd_sp <- as_Spatial(grd_sf)
+rm(grid)
+rm(grd_sf)
+grd_sp<-spTransform(grd_sp,crs(locs_sp))

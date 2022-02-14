@@ -16,7 +16,7 @@ locs<-locs %>% filter(long < 0)
 #read data and collapse to long tidy table
 read<-read_csv("./data/BulkExport-14 Locations-20220212153316.csv",skip=1)
 dattbl<-read %>% pivot_longer(cols = 2:ncol(read),names_to = "well_identifier", values_to = "level_ft")
-well_names<-tbl[1:ncol(read)-1,]
+well_names<-dattbl[1:ncol(read)-1,]
 # elevations manually obtained be querying https://elevation.nationalmap.gov/arcgis/services/3DEPElevation/ImageServer/WCSServer
 tbl<-merge(dattbl,locs,by.x=3,by.y = "Location", all=FALSE)
 names(tbl)[1:2]<-c("well_name","elevation")
