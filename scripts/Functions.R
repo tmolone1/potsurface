@@ -5,19 +5,16 @@ library(raster)
 library(fields)
 library(stars)
 library(sf)
-mygrid<-function(x, y, z, buff, coords) {
-  xyz <- as.data.frame(cbind(x,y,z), colnames=c("x","y","z"))
-  pts <- SpatialPointsDataFrame(xyz[,c("x","y")], 
-                                data= xyz,
-                                proj4string = coords)
-  ext<-bbox(pts)+t(matrix(buff,2,2)*c(-1,1))
-  grd <- as.data.frame(spsample(pts, "regular", n=50000, bb=ext))
+mygrid<-function(pts_df) {
+  grd <- as.data.frame(spsample(pts_df, "regular", n=50000, 
+	    bb=(bbox(pts_df)+t(matrix(mean(c(diff(range(pts_df@coords[,1])),diff(range(pts_df@coords[,2]))))*.1,2,2)*c(-1,1)))))  # buffer the extent of the data by 10% of the range
   names(grd)       <- c("X", "Y")
   coordinates(grd) <- c("X", "Y")
   gridded(grd)     <- TRUE  # Create SpatialPixel object
   fullgrid(grd)    <- TRUE  # Create SpatialGrid object
   # Add Wells_points's projection information to the empty grid
-  proj4string(grd)<-proj4string(pts)
+  crs(grd)<-crs(pts_df)
+  #grd<-spTransform(grd,crs(pts_df))
   return(grd)
 }
 
@@ -47,8 +44,9 @@ mypts<-function(x, y, z, coords, Locids) {
   return(pts)
 }
 
-mycontours<-function(r, levs) {
-  cl<-rasterToContour(r, levels=levs)
+mycontours<-function(r) {
+  cl<-rasterToContour(r, levels=
+                        seq(signif(r@data@min,2),signif(r@data@max,2),(diff(c(signif(r@data@min,2),signif(r@data@max,2)))/20)))
   return(cl)
 }
 
@@ -58,16 +56,11 @@ roundUpNice <- function(x, nice=c(1,2,4,5,6,8,10)) {
 }
 
 
-myTPS<-function(x, y, z, grd, coords) {
-  xyz <- as.data.frame(cbind(x,y,z), colnames=c("x","y","z"))
-  pts <- SpatialPointsDataFrame(xyz[,c("x","y")], 
-                                data= xyz,
-                                proj4string = coords)
+myTPS<-function(pts_df, grd) {
   fit_TPS <- fields::Tps( # using {fields}
-    x = as.matrix(xyz[, c("x", "y")]), # accepts points but expects them as matrix
-    Y = xyz$z,  # the dependent variable
+    x = as.matrix(pts_df@coords), # accepts points but expects them as matrix
+    Y = pts_df$ps_elev,  # the dependent variable
     miles = FALSE)
-  grd_template_raster<-raster(grd)
-  interp_TPS <- interpolate(grd_template_raster, fit_TPS)
+  interp_TPS <- interpolate(raster(grd), fit_TPS)
   return(interp_TPS)
 }

@@ -36,9 +36,29 @@ server <-
                                       proj4string=CRS("+init=EPSG:4326"),
                                       data=re2())
     })
+    re4 <- reactive({
+      mygrid(re3())
+    })
+    re5 <- reactive({
+      myTPS(re3(),re4())
+    })
+    re6 <- reactive({
+      mycontours(re5())
+    })
+    
     
       output$b <- renderDataTable({re()})
       output$z <- renderDataTable({re2()})
-      output$y <- renderPlot({plot(re3())})
+      output$y <- renderPlot({
+        suppressWarnings(
+        ggplot() +
+          geom_point(data = st_as_sf(re3()), aes(x = long, y = lat), color = "red", fill = "grey") + 
+          geom_sf(data = st_as_sf(re6())) + 
+          geom_sf_text(data = st_as_sf(re6()), aes(label = level), size = 2) +
+          geom_sf_text(data = st_as_sf(re3()), aes(label = well_name), size = 2, nudge_y = 0.008) +
+          geom_sf_text(data = st_as_sf(re3()), aes(label = round(ps_elev,2)), size = 2,nudge_y = 0.004) +
+          theme_classic()
+        )
+      })
   }
 shinyApp(ui, server)
