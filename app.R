@@ -1,8 +1,15 @@
 library(shiny)
 library(tidyverse)
+library(lubridate)
 library(DT)
 library(ggplot2)
 library(sp)
+library(gstat)
+library(rgdal)
+library(raster)
+library(fields)
+library(stars)
+library(sf)
 ui <- fluidPage(
   sidebarLayout(
     sidebarPanel(

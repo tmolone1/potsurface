@@ -1,0 +1,13 @@
+name: potsurface
+title:
+username:
+account: wyseo
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 5677682
+bundleId: 5590876
+url: https://wyseo.shinyapps.io/potsurface/
+when: 1645123549.87683
+lastSyncTime: 1645123549.87683
+asMultiple: FALSE
+asStatic: FALSE
