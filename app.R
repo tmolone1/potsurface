@@ -24,7 +24,9 @@ ui <- fluidPage(
     hr(),
     dataTableOutput("z"),
     hr(),
-    plotOutput("y")
+    plotOutput("contour_map"),
+    hr(),
+    plotOutput("hydrograph")
     )
   )
 )
@@ -56,7 +58,7 @@ server <-
     
       output$b <- renderDataTable({re()})
       output$z <- renderDataTable({re2()})
-      output$y <- renderPlot({
+      output$contour_map <- renderPlot({
         suppressWarnings(
         ggplot() +
           geom_point(data = st_as_sf(re3()), aes(x = long, y = lat), color = "red", fill = "grey") + 
@@ -67,5 +69,17 @@ server <-
           theme_classic()
         )
       })
+      output$hydrograph <- renderPlot({
+        ggplot(re(), aes(x=timestamp, y=level_ft)) +
+          geom_line(aes(color=well_name)) + 
+          geom_point(aes(color=well_name)) +
+          xlab("") +
+          ylab("Depth Below Measuring Point (ft)") +
+          theme_classic() +
+          theme(axis.text.x=element_text(angle=60, hjust=1)) +
+          scale_y_reverse() + 
+          scale_x_date(date_breaks = "1 year", date_labels = "%Y")
+      })
+      
   }
 shinyApp(ui, server)
