@@ -5,9 +5,9 @@ account: wyseo
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 5677682
-bundleId: 5591272
+bundleId: 5629643
 url: https://wyseo.shinyapps.io/potsurface/
-when: 1645128704.55348
-lastSyncTime: 1645128704.55348
+when: 1646155980.95116
+lastSyncTime: 1646155980.95116
 asMultiple: FALSE
 asStatic: FALSE

@@ -15,10 +15,8 @@ ui <- navbarPage(title= "Potentiometrc Surface Mapping Application",
   sidebarLayout(
     sidebarPanel(
     checkboxGroupInput("well_names", "Wells to include", unique(dattbl$well_name), selected=unique(dattbl$well_name)),
-  selectInput("agg_method","Aggregation Method",c("Date Range")),
-  dateRangeInput("date_range", "Date range:",
-                 start = "2013-10-09",
-                 end   = "2021-11-09")
+  selectInput("agg_method","Aggregation Method",c("Date Range", "Closest Measurement to a Date")),
+  uiOutput("dateUI")
     ),
   mainPanel(
     plotOutput("contour_map")
@@ -35,15 +33,32 @@ tabPanel("Hydrograph",
          plotOutput("hydrograph")
 )
 )
+
 server <-
   function(input,output,session){
+    
+    output$dateUI<-renderUI({
+      if (input$agg_method == "Date Range") return(
+      dateRangeInput("date_range", "Date range:",
+                   start = min(dattbl$timestamp),
+                   end   = max(dattbl$timestamp)))
+      dateInput("date", "Date:", value = mean(dattbl$timestamp),
+                min = min(dattbl$timestamp),
+                max = max(dattbl$timestamp))
+    })
+    
     re <- reactive({
       dattbl %>% 
         filter(well_name %in% input$well_names, timestamp>min(input$date_range), timestamp < max(input$date_range))
       })
     re2 <- reactive({
+        if (input$agg_method == "Date Range") return(
       re() %>% 
-        group_by(well_name) %>% summarize(lat=mean(lat), long=mean(long), ps_elev=mean(ps_elev), n_obs=n())
+        group_by(well_name) %>% summarize(lat=mean(lat), long=mean(long), ps_elev=mean(ps_elev), n_obs=n()) 
+      )
+      re() %>% 
+        group_by(well_name) %>% mutate(date_query=abs(timestamp-input$date)) %>% slice_min(order_by=date_query) %>% 
+        summarize(lat=mean(lat), long=mean(long), ps_elev=mean(ps_elev), n_obs=n(), date_returned=timestamp) 
     })
     re3 <- reactive({
       SpatialPointsDataFrame(data.frame(re2()$long, re2()$lat), 
@@ -88,7 +103,7 @@ server <-
         width =1600,
         height = 1000,
         res=160)
-      
+    
       
   }
 shinyApp(ui, server)
