@@ -10,7 +10,8 @@ library(raster)
 library(fields)
 library(stars)
 library(sf)
-ui <- fluidPage(
+ui <- navbarPage(title= "Potentiometrc Surface Mapping Application",
+                 tabPanel("Input / Map",
   sidebarLayout(
     sidebarPanel(
     checkboxGroupInput("well_names", "Wells to include", unique(dattbl$well_name), selected=unique(dattbl$well_name)),
@@ -20,15 +21,19 @@ ui <- fluidPage(
                  end   = "2021-11-09")
     ),
   mainPanel(
-    dataTableOutput("b"),
-    hr(),
-    dataTableOutput("z"),
-    hr(),
-    plotOutput("contour_map"),
-    hr(),
-    plotOutput("hydrograph")
-    )
+    plotOutput("contour_map")
   )
+  )
+),
+tabPanel("Table (all data)",
+         dataTableOutput("b")
+         ),
+tabPanel("Table (aggregated)",
+         dataTableOutput("z")
+),
+tabPanel("Hydrograph",
+         plotOutput("hydrograph")
+)
 )
 server <-
   function(input,output,session){
@@ -59,16 +64,17 @@ server <-
       output$b <- renderDataTable({re()})
       output$z <- renderDataTable({re2()})
       output$contour_map <- renderPlot({
-        suppressWarnings(
         ggplot() +
           geom_point(data = st_as_sf(re3()), aes(x = long, y = lat), color = "red", fill = "grey") + 
           geom_sf(data = st_as_sf(re6())) + 
           geom_sf_text(data = st_as_sf(re6()), aes(label = level), size = 2) +
-          geom_sf_text(data = st_as_sf(re3()), aes(label = well_name), size = 2, nudge_y = 0.008) +
-          geom_sf_text(data = st_as_sf(re3()), aes(label = round(ps_elev,2)), size = 2,nudge_y = 0.004) +
-          theme_classic()
-        )
-      })
+          geom_sf_text(data = st_as_sf(re3()), aes(label = well_name), size = 2, nudge_y = 0.010) +
+          geom_sf_text(data = st_as_sf(re3()), aes(label = round(ps_elev,2)), size = 2,nudge_y = 0.005) +
+          theme_classic()},
+        width =800,
+        height = 1000,
+        res=160)
+
       output$hydrograph <- renderPlot({
         ggplot(re(), aes(x=timestamp, y=level_ft)) +
           geom_line(aes(color=well_name)) + 
@@ -78,8 +84,11 @@ server <-
           theme_classic() +
           theme(axis.text.x=element_text(angle=60, hjust=1)) +
           scale_y_reverse() + 
-          scale_x_date(date_breaks = "1 year", date_labels = "%Y")
-      })
+          scale_x_date(date_breaks = "1 year", date_labels = "%Y")},
+        width =1600,
+        height = 1000,
+        res=160)
+      
       
   }
 shinyApp(ui, server)
